@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:si="http://www.springframework.org/schema/integration"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration-1.0.xsd">
+
+	<context:component-scan base-package="com.soluvas.samples.eventfx.si" />
+
+	<bean class="com.soluvas.samples.eventfx.si.Sensor">
+		<property name="sensorSyncListener">
+			<si:gateway id="sensorSyncListener" service-interface="com.soluvas.samples.eventfx.si.SyncListener"
+				default-request-channel="Sensor_SensorEvent_sync" />
+		</property>
+		<property name="sensorAsyncListener">
+			<si:gateway id="sensorAsyncListener" service-interface="com.soluvas.samples.eventfx.si.AsyncListener"
+				default-request-channel="Sensor_SensorEvent_async" />
+		</property>
+	</bean>
+	<bean id="display1" class="com.soluvas.samples.eventfx.si.Display">
+		<property name="name" value="Sony(sync)" />
+	</bean>
+	<bean id="display2" class="com.soluvas.samples.eventfx.si.Display">
+		<property name="name" value="Samsung(async)" />
+	</bean>
+	
+	<si:channel id="Sensor_SensorEvent_sync" />
+	<si:publish-subscribe-channel id="Sensor_SensorEvent_async" />
+
+	<si:service-activator input-channel="Sensor_SensorEvent_sync" ref="display1" method="update" />
+	<si:chain input-channel="Sensor_SensorEvent_async">
+		<si:delayer default-delay="1200" />
+		<si:service-activator ref="display2" method="notify" />
+	</si:chain>
+	
+</beans>
